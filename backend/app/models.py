@@ -3,10 +3,10 @@
 from sqlalchemy import (
     Column, Integer, String, DateTime, Boolean, Text, ForeignKey, JSON, inspect
 )
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+from app.database import Base
 
 
 # ===== Users Table (Authentication) =====

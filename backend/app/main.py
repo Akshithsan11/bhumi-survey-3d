@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import get_db, engine, Base, SessionLocal
-from app.models import User
+from app.models import User, Parcel, Building, Floor, PropertyUnit, ULPIN, Infrastructure, AIJob, ValidationResult
 from app.routes.auth import router as auth_router
 from app.routes.parcels import router as parcels_router
 from app.routes.buildings import router as buildings_router
@@ -24,23 +24,20 @@ from app.services.auth import get_password_hash
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
     try:
-        Base.metadata.create_all(bind=engine)
-        db = SessionLocal()
-        try:
-            admin = db.query(User).filter(User.username == "admin").first()
-            if not admin:
-                admin = User(
-                    username="admin",
-                    email="admin@example.com",
-                    password_hash=get_password_hash("REDACTED"),
-                )
-                db.add(admin)
-                db.commit()
-        finally:
-            db.close()
-    except Exception as exc:
-        print(f"WARN: DB init failed: {exc}", flush=True)
+        admin = db.query(User).filter(User.username == "admin").first()
+        if not admin:
+            admin = User(
+                username="admin",
+                email="admin@example.com",
+                password_hash=get_password_hash("REDACTED"),
+            )
+            db.add(admin)
+            db.commit()
+    finally:
+        db.close()
     yield
 
 
