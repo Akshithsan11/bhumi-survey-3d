@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Globe, Building2, Layers, Zap, ArrowRight, Shield } from "lucide-react";
+import { Globe, Building2, Layers, Zap, ArrowRight, Shield, Cpu } from "lucide-react";
 
 export function Landing() {
   const { isAuthenticated } = useAuth();

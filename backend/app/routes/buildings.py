@@ -11,6 +11,7 @@ from app.schemas import BuildingCreate, BuildingUpdate, BuildingResponse
 router = APIRouter(prefix="/api/buildings", tags=["buildings"])
 
 
+@router.get("", response_model=list[BuildingResponse])
 @router.get("/", response_model=list[BuildingResponse])
 async def list_buildings(
     parcel_id: int | None = None,
@@ -36,6 +37,7 @@ async def get_building(
     return b
 
 
+@router.post("", response_model=BuildingResponse, status_code=201)
 @router.post("/", response_model=BuildingResponse, status_code=201)
 async def create_building(
     data: BuildingCreate,

@@ -11,6 +11,7 @@ from app.schemas import ParcelCreate, ParcelUpdate, ParcelResponse
 router = APIRouter(prefix="/api/parcels", tags=["parcels"])
 
 
+@router.get("", response_model=list[ParcelResponse])
 @router.get("/", response_model=list[ParcelResponse])
 async def list_parcels(
     skip: int = 0, limit: int = 100,
@@ -32,6 +33,7 @@ async def get_parcel(
     return parcel
 
 
+@router.post("", response_model=ParcelResponse, status_code=201)
 @router.post("/", response_model=ParcelResponse, status_code=201)
 async def create_parcel(
     data: ParcelCreate,

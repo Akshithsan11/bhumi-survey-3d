@@ -11,6 +11,7 @@ from app.schemas import FloorCreate, FloorUpdate, FloorResponse
 router = APIRouter(prefix="/api/floors", tags=["floors"])
 
 
+@router.get("", response_model=list[FloorResponse])
 @router.get("/", response_model=list[FloorResponse])
 async def list_floors(
     building_id: int | None = None,

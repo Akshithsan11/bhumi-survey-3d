@@ -11,6 +11,7 @@ from app.schemas import ValidationRequest, ValidationResponse
 router = APIRouter(prefix="/api/validation", tags=["validation"])
 
 
+@router.get("", response_model=list[ValidationResponse])
 @router.get("/", response_model=list[ValidationResponse])
 async def list_validations(
     skip: int = 0, limit: int = 50,
@@ -20,6 +21,7 @@ async def list_validations(
     return db.query(ValidationResult).offset(skip).limit(limit).all()
 
 
+@router.post("", response_model=ValidationResponse, status_code=201)
 @router.post("/", response_model=ValidationResponse, status_code=201)
 async def run_validation(
     data: ValidationRequest,

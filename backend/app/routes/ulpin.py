@@ -12,6 +12,7 @@ from app.services.ulpin import generate_ulpin, validate_ulpin_format
 router = APIRouter(prefix="/api/ulpin", tags=["ulpin"])
 
 
+@router.get("", response_model=list[ULPINResponse])
 @router.get("/", response_model=list[ULPINResponse])
 async def list_ulpins(
     skip: int = 0, limit: int = 100,

@@ -11,6 +11,7 @@ from app.schemas import InfrastructureCreate, InfrastructureResponse
 router = APIRouter(prefix="/api/infrastructure", tags=["infrastructure"])
 
 
+@router.get("", response_model=list[InfrastructureResponse])
 @router.get("/", response_model=list[InfrastructureResponse])
 async def list_infrastructure(
     building_id: int | None = None,
@@ -24,6 +25,7 @@ async def list_infrastructure(
     return q.offset(skip).limit(limit).all()
 
 
+@router.post("", response_model=InfrastructureResponse, status_code=201)
 @router.post("/", response_model=InfrastructureResponse, status_code=201)
 async def create_infrastructure(
     data: InfrastructureCreate,

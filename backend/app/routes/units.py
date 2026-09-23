@@ -11,6 +11,7 @@ from app.schemas import UnitCreate, UnitUpdate, UnitResponse
 router = APIRouter(prefix="/api/units", tags=["units"])
 
 
+@router.get("", response_model=list[UnitResponse])
 @router.get("/", response_model=list[UnitResponse])
 async def list_units(
     floor_id: int | None = None,
