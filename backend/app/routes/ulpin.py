@@ -22,6 +22,15 @@ async def list_ulpins(
     return db.query(ULPIN).offset(skip).limit(limit).all()
 
 
+@router.get("/validate")
+async def validate_ulpin_endpoint(
+    ulpin_code: str,
+    _: User = Depends(get_current_user),
+):
+    result = validate_ulpin_format(ulpin_code)
+    return result
+
+
 @router.get("/{ulpin_id}", response_model=ULPINResponse)
 async def get_ulpin(
     ulpin_id: int,
@@ -60,12 +69,3 @@ async def generate_new_ulpin(
     db.commit()
     db.refresh(ulpin)
     return ulpin
-
-
-@router.get("/validate")
-async def validate_ulpin_endpoint(
-    ulpin_code: str,
-    _: User = Depends(get_current_user),
-):
-    result = validate_ulpin_format(ulpin_code)
-    return result
