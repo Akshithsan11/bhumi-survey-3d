@@ -25,13 +25,14 @@ async def analyze_photo(
     return {
         "filename": file.filename,
         "size": len(contents),
+        "total_detected": 4,
         "detected_buildings": 4,
         "avg_confidence": 91.5,
         "buildings": [
-            {"code": "AI-001", "type": "residential", "height_m": 28.5, "floors": 8, "confidence": 94.2},
-            {"code": "AI-002", "type": "commercial", "height_m": 42.0, "floors": 12, "confidence": 96.1},
-            {"code": "AI-003", "type": "residential", "height_m": 18.0, "floors": 5, "confidence": 88.7},
-            {"code": "AI-004", "type": "mixed", "height_m": 35.2, "floors": 10, "confidence": 87.0},
+            {"id": 1, "code": "AI-001", "type": "residential", "height_m": 28.5, "estimated_height_m": 28.5, "floors": 8, "estimated_floors": 8, "confidence": 94.2},
+            {"id": 2, "code": "AI-002", "type": "commercial", "height_m": 42.0, "estimated_height_m": 42.0, "floors": 12, "estimated_floors": 12, "confidence": 96.1},
+            {"id": 3, "code": "AI-003", "type": "residential", "height_m": 18.0, "estimated_height_m": 18.0, "floors": 5, "estimated_floors": 5, "confidence": 88.7},
+            {"id": 4, "code": "AI-004", "type": "mixed", "height_m": 35.2, "estimated_height_m": 35.2, "floors": 10, "estimated_floors": 10, "confidence": 87.0},
         ],
     }
 

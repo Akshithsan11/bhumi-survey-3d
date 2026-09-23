@@ -1,6 +1,7 @@
 """Bhumi Survey 3D - Infrastructure Routes"""
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -9,6 +10,11 @@ from app.dependencies import get_current_user
 from app.schemas import InfrastructureCreate, InfrastructureResponse
 
 router = APIRouter(prefix="/api/infrastructure", tags=["infrastructure"])
+
+
+class ConflictCheckRequest(BaseModel):
+    building_id: int
+    depth_m: float = 3.0
 
 
 @router.get("", response_model=list[InfrastructureResponse])
@@ -41,11 +47,12 @@ async def create_infrastructure(
 
 @router.post("/conflict-check")
 async def check_conflicts(
-    building_id: int,
-    depth_m: float = 3.0,
+    data: ConflictCheckRequest,
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    building_id = data.building_id
+    depth_m = data.depth_m
     building = db.query(Building).filter(Building.id == building_id).first()
     if not building:
         raise HTTPException(404, "Building not found")

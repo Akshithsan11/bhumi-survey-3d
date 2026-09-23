@@ -62,7 +62,7 @@ async def generate_new_ulpin(
     return ulpin
 
 
-@router.post("/validate")
+@router.get("/validate")
 async def validate_ulpin_endpoint(
     ulpin_code: str,
     _: User = Depends(get_current_user),

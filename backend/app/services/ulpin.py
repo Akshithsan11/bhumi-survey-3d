@@ -9,11 +9,11 @@ def generate_ulpin(
 ) -> str:
     parts = ["IND", "TG", "HYD", plot_code]
     if building_code:
-        parts.append(f"B{building_code}")
+        parts.append(building_code)
     if floor_code:
-        parts.append(f"F{floor_code}")
+        parts.append(floor_code)
     if unit_code:
-        parts.append(f"U{unit_code}")
+        parts.append(unit_code)
     return "-".join(parts)
 
 
