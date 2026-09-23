@@ -1,0 +1,1 @@
+window.__LANDVERSE_API_URL__ = 'https://bhumi-survey-3d-api.onrender.com';

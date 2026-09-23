@@ -1,42 +1,61 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { api } from "../api/client";
+import type { User, AuthToken } from "../types";
 
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  token?: string;
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  login: (token: string) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
 }
 
-export const AuthContext = createContext({
-  user: null as User | null,
-  login: (token: string) => {},
+const AuthContext = createContext<AuthState>({
+  user: null,
+  token: null,
+  login: () => {},
   logout: () => {},
-  isAuthenticated: boolean,
+  isAuthenticated: false,
 });
 
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider: React.FC = ({ children }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
-  // Check for token on load
   useEffect(() => {
-    const token = localStorage.getItem("bhumi_token");
-    if (token) {
-      setUser({ id: 1, username: "user", email: "", token });
+    const stored = localStorage.getItem("bhumi_token");
+    if (stored) {
+      setToken(stored);
+      api.me()
+        .then((u) => setUser(u as unknown as User))
+        .catch(() => {
+          localStorage.removeItem("bhumi_token");
+          setToken(null);
+        });
     }
   }, []);
 
-  const login = (token: string) => {
-    setUser({ id: 1, username: "user", email: "", token });
-    localStorage.setItem("bhumi_token", token);
+  const login = (newToken: string) => {
+    localStorage.setItem("bhumi_token", newToken);
+    setToken(newToken);
+    api.me()
+      .then((u) => setUser(u as unknown as User))
+      .catch(() => {});
   };
 
   const logout = () => {
-    setUser(null);
     localStorage.removeItem("bhumi_token");
+    setToken(null);
+    setUser(null);
   };
 
-  return <Context.Provider value={{ user, login, logout, isAuthenticated: !!user }}>{children}</Context.Provider>;
-};
+  return (
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}

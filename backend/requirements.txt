@@ -1,25 +1,14 @@
-# FastAPI web framework
-fastapi
-uvicorn[standard]
-
-# Database
-sqlalchemy
-psycopg2-binary
-alembic
-
-# Authentication
-python-jose[cryptography]
-bcrypt
-
-# CORS
-fastapi-cors  # or use CORSMiddleware from FastAPI
-
-# AI / Computer Vision
-opencv-python
-numpy
-Pillow
-
-# Utilities
-python-dotenv
-aiohttp
-aiofiles
+# Bhumi Survey 3D Backend Dependencies
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.9
+python-dotenv>=1.0.1
+pydantic[email]>=2.7.0
+opencv-python-headless>=4.9.0
+numpy>=1.26.0
+Pillow>=10.3.0
+aiofiles>=23.2.1

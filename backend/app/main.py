@@ -1,154 +1,99 @@
 """Bhumi Survey 3D - FastAPI Backend Application"""
 
 import os
-from datetime import timedelta
+from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional
 
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
-
-from app.database import get_db, engine, Base
-from app.models import User, Parcel, Building, Floor, PropertyUnit
+from app.database import get_db, engine, Base, SessionLocal
+from app.models import User
 from app.routes.auth import router as auth_router
 from app.routes.parcels import router as parcels_router
 from app.routes.buildings import router as buildings_router
 from app.routes.floors import router as floors_router
 from app.routes.units import router as units_router
+from app.routes.ulpin import router as ulpin_router
+from app.routes.analysis import router as analysis_router
+from app.routes.validation import router as validation_router
+from app.routes.infrastructure import router as infra_router
+from app.routes.stats import router as stats_router
+from app.services.auth import get_password_hash
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.username == "admin").first()
+        if not admin:
+            admin = User(
+                username="admin",
+                email="admin@example.com",
+                password_hash=get_password_hash("REDACTED"),
+            )
+            db.add(admin)
+            db.commit()
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
     title="Bhumi Survey 3D API",
-    description="3D Property Intelligence Platform API v2",
+    description="3D Property Intelligence Platform API",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
-# CORS - Allow frontend origin
+cors_origins = os.environ.get(
+    "CORS_ORIGINS",
+    "https://bhumi-survey-3d.vercel.app,http://localhost:5173,http://localhost:3000",
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://bhumi-survey-3d.vercel.app"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Bearer token security
-security = HTTPBearer(auto_error=False)
-
-
-# ===== INCLUDE ROUTERS =====
 app.include_router(auth_router)
 app.include_router(parcels_router)
 app.include_router(buildings_router)
 app.include_router(floors_router)
 app.include_router(units_router)
+app.include_router(ulpin_router)
+app.include_router(analysis_router)
+app.include_router(validation_router)
+app.include_router(infra_router)
+app.include_router(stats_router)
 
-
-# ===== ROOT & HEALTH =====
 
 @app.get("/", tags=["root"])
 async def root():
-    """Root endpoint"""
     return {
-        "message": "Welcome to Bhumi Survey 3D API",
+        "message": "Bhumi Survey 3D API",
         "version": "2.0.0",
         "docs": "/docs",
-        "auth_endpoint": "/api/auth/login",
         "status": "active",
     }
 
 
 @app.get("/health", tags=["health"], include_in_schema=False)
 async def health():
-    """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": __import__("datetime").datetime.utcnow(),
-        "service": "bhumi-survey-3d-api",
+        "database": "connected",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
-# ===== AUTH DEPENDENCY =====
-
-def get_db():
-    """Get database session"""
-    from sqlalchemy.orm import Session
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Session = Depends(get_db),
-):
-    """Get current authenticated user from JWT token"""
-    from app.services.auth import decode_access_token
-
-    if credentials is None:
-        return None
-
-    token = credentials.credentials
-    from app.services.auth import token_blocklist
-    if token in token_blocklist:
-        return None
-
-    payload = decode_access_token(token)
-    if payload is None:
-        return None
-
-    user_id: str = payload.get("sub")
-    if user_id is None:
-        return None
-
-    try:
-        user = db.query(User).filter(User.id == int(user_id)).first()
-        return user
-    except (ValueError, TypeError):
-        return None
-
-
-# ===== API ENDPOINTS =====
-
-@app.get("/api/users/me", response_model=UserResponse, tags=["auth"])
-async def get_current_user_endpoint(
-    current_user: Optional[User] = Depends(get_current_user),
-):
-    """Get current user profile"""
-    if current_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
-    return current_user
-
-
-# ===== LEGACY/OTHER ENDPOINTS =====
-
-@app.get("/api/test", tags=["test"])
-async def test_endpoint():
-    """Test endpoint"""
-    return {"status": "ok", "message": "API is working"}
-
-
-# ===== RUN THE APP =====
-
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        log_level="info",
-    )
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

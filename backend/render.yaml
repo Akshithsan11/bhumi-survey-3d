@@ -1,0 +1,24 @@
+# Bhumi Survey 3D Backend
+
+service: bhumi-survey-3d-api
+type: web
+runtime: docker
+
+dockerfilePath: Dockerfile
+dockerContext: .
+
+healthCheckPath: /health
+autoDeploy: true
+
+envVars:
+  - key: PYTHONUNBUFFERED
+    value: "1"
+  - key: SECRET_KEY
+    generateValue: true
+  - key: JWT_SECRET
+    generateValue: true
+  - key: UPLOAD_DIRECTORY
+    value: /app/uploads
+
+numInstances: 1
+plan: free
