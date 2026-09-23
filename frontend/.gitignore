@@ -33,3 +33,5 @@ out/
 
 # Bhumi specific
 LANDVERSE_3D_V2_PLAN.md
+.vercel
+.env*

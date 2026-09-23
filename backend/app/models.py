@@ -231,7 +231,7 @@ class ValidationResult(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     overall_score = Column(Integer, default=0)
     passed_rules = Column(Integer, default=0)
-    failed_rules = Column(JSONB, default="[]")
+    failed_rules = Column(JSON, default="[]")
     validation_type = Column(String(50), default="standard")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
