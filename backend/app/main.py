@@ -97,6 +97,30 @@ async def health():
     }
 
 
+@app.get("/debug/db", tags=["debug"], include_in_schema=False)
+async def debug_db():
+    try:
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            n = db.query(User).count()
+            return {"ok": True, "users": n}
+        finally:
+            db.close()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+@app.get("/debug/bcrypt", tags=["debug"], include_in_schema=False)
+async def debug_bcrypt():
+    try:
+        h = get_password_hash("REDACTED")
+        from app.services.auth import verify_password
+        return {"ok": True, "verified": verify_password("REDACTED", h)}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

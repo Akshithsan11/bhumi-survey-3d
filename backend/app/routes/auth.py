@@ -21,34 +21,44 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/signup", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(
-        (User.username == user_data.username) | (User.email == user_data.email)
-    ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Username or email already registered")
-    new_user = User(
-        username=user_data.username,
-        email=user_data.email,
-        password_hash=get_password_hash(user_data.password),
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    token = create_access_token(str(new_user.id), timedelta(hours=24))
-    return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
+    try:
+        existing = db.query(User).filter(
+            (User.username == user_data.username) | (User.email == user_data.email)
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username or email already registered")
+        new_user = User(
+            username=user_data.username,
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password),
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        token = create_access_token(str(new_user.id), timedelta(hours=24))
+        return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"signup_error: {exc}")
 
 
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_data.email).first()
-    if not user or not verify_password(user_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    token = create_access_token(str(user.id), timedelta(hours=24))
-    return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
+    try:
+        user = db.query(User).filter(User.email == user_data.email).first()
+        if not user or not verify_password(user_data.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        token = create_access_token(str(user.id), timedelta(hours=24))
+        return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"login_error: {exc}")
 
 
 @router.post("/logout")
