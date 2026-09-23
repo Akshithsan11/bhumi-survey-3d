@@ -1,7 +1,8 @@
-const API_BASE =
+const RAW_BASE =
   import.meta.env.VITE_API_URL ||
   (typeof window !== "undefined" && window.__LANDVERSE_API_URL__) ||
-  "/api";
+  "";
+const API_BASE = RAW_BASE.replace(/\/+$/, "").replace(/\/api$/, "");
 
 const getHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -11,7 +12,8 @@ const getHeaders = (): Record<string, string> => {
 };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${API_BASE}/api${normalized}`, {
     ...options,
     headers: { ...getHeaders(), ...options.headers },
   });
@@ -86,7 +88,7 @@ export const api = {
   analyzePhoto: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return fetch(`${API_BASE}/analysis/upload`, {
+    return fetch(`${API_BASE}/api/analysis/upload`, {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("bhumi_token") || ""}` },
       body: form,

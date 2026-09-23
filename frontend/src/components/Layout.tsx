@@ -1,5 +1,5 @@
-import { useState, useEffect, type ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Globe, LayoutDashboard, Map, Upload, Shield, Layers, Zap,
@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { to: "/infrastructure", label: "Underground", icon: Zap },
 ];
 
-export function Layout({ children }: { children: ReactNode }) {
+export function Layout() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -112,7 +112,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
+        <div className="p-6 lg:p-8 max-w-7xl mx-auto"><Outlet /></div>
       </main>
     </div>
   );
