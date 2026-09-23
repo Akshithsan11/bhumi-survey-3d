@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { Building2, MapPin, Layers, Home, Shield, Zap, Cpu, TrendingUp } from "lucide-react";
+import { Building2, MapPin, Layers, Home, Shield, Zap, Cpu, TrendingUp, Rocket, ArrowRight } from "lucide-react";
 
 export function Dashboard() {
   const [stats, setStats] = useState({
@@ -83,6 +84,38 @@ export function Dashboard() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Quick links to prototypes */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Rocket size={18} className="text-blue-400" /> Jump to Prototypes
+          </h2>
+          <Link to="/prototypes" className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
+            All modules <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { to: "/map", label: "3D Map", icon: MapPin, color: "text-blue-400", bg: "bg-blue-500/10" },
+            { to: "/analysis", label: "AI Detection", icon: Cpu, color: "text-violet-400", bg: "bg-violet-500/10" },
+            { to: "/ulpin", label: "ULPIN", icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+            { to: "/infrastructure", label: "Underground", icon: Zap, color: "text-rose-400", bg: "bg-rose-500/10" },
+          ].map((q) => (
+            <Link
+              key={q.to}
+              to={q.to}
+              className="card flex items-center gap-3 hover:border-blue-500/30 transition-all"
+            >
+              <div className={`w-10 h-10 rounded-xl ${q.bg} flex items-center justify-center`}>
+                <q.icon size={18} className={q.color} />
+              </div>
+              <span className="text-sm font-medium">{q.label}</span>
+              <ArrowRight size={14} className="ml-auto text-slate-600" />
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.dependencies import get_current_user
-from app.schemas import UserCreate, UserLogin, UserResponse, Token
+from app.schemas import (
+    UserCreate, UserLogin, UserResponse, Token,
+    ChangePasswordRequest, ChangePasswordResponse,
+)
 from app.services.auth import (
     verify_password,
     get_password_hash,
@@ -39,8 +42,8 @@ async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
         return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"signup_error: {exc}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Registration failed. Please try again.")
 
 
 @router.post("/login", response_model=Token)
@@ -57,8 +60,8 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         return {"access_token": token, "token_type": "bearer", "expires_in": 86400}
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"login_error: {exc}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Login failed. Please try again.")
 
 
 @router.post("/logout")
@@ -69,3 +72,33 @@ async def logout(current_user: User = Depends(get_current_user)):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.post("/change-password", response_model=ChangePasswordResponse)
+async def change_password(
+    body: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        if not verify_password(body.current_password, current_user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect",
+            )
+        if body.current_password == body.new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be different from current password",
+            )
+        current_user.password_hash = get_password_hash(body.new_password)
+        db.add(current_user)
+        db.commit()
+        return {
+            "message": "Password changed successfully. Please log in again.",
+            "reauth_required": True,
+        }
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not change password")

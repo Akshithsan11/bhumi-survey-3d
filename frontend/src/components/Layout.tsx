@@ -3,7 +3,7 @@ import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Globe, LayoutDashboard, Map, Upload, Shield, Layers, Zap,
-  LogOut, Menu, X, User,
+  LogOut, Menu, X, User, Settings as SettingsIcon, Rocket,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -13,6 +13,8 @@ const NAV_ITEMS = [
   { to: "/ulpin", label: "ULPIN", icon: Shield },
   { to: "/validation", label: "Validation", icon: Layers },
   { to: "/infrastructure", label: "Underground", icon: Zap },
+  { to: "/prototypes", label: "Prototypes", icon: Rocket },
+  { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function Layout() {

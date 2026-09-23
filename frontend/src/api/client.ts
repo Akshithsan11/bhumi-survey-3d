@@ -38,6 +38,11 @@ export const api = {
       { method: "POST", body: JSON.stringify({ username, email, password }) }
     ),
   me: () => request<Record<string, unknown>>("/auth/me"),
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ message: string; reauth_required: boolean }>(
+      "/auth/change-password",
+      { method: "POST", body: JSON.stringify({ current_password, new_password }) }
+    ),
 
   // Stats
   dashboardStats: () => request<Record<string, number>>("/stats/dashboard"),

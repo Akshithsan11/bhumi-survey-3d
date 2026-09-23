@@ -173,19 +173,19 @@ export function ULPINPage() {
                   </div>
                 </div>
 
-                {validateResult.valid && (
+                {Boolean(validateResult.valid) && (
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     {[
-                      ["Segments", validateResult.segments],
-                      ["Country", validateResult.country],
-                      ["State", validateResult.state],
-                      ["City", validateResult.city],
-                      ["Plot", validateResult.plot],
-                      ["Building", validateResult.building || "N/A"],
+                      ["Segments", String(validateResult.segments)],
+                      ["Country", String(validateResult.country)],
+                      ["State", String(validateResult.state)],
+                      ["City", String(validateResult.city)],
+                      ["Plot", String(validateResult.plot)],
+                      ["Building", String(validateResult.building || "N/A")],
                     ].map(([label, value]) => (
-                      <div key={String(label)} className="bg-slate-800/40 rounded-xl p-3">
+                      <div key={label} className="bg-slate-800/40 rounded-xl p-3">
                         <p className="text-slate-500 text-xs">{label}</p>
-                        <p className="font-medium">{String(value)}</p>
+                        <p className="font-medium">{value}</p>
                       </div>
                     ))}
                   </div>

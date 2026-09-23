@@ -10,6 +10,8 @@ import { Analysis } from "./pages/Analysis";
 import { ULPINPage } from "./pages/ULPINPage";
 import { Validation } from "./pages/Validation";
 import { Infrastructure } from "./pages/Infrastructure";
+import { Settings } from "./pages/Settings";
+import { Prototypes } from "./pages/Prototypes";
 import type { ReactNode } from "react";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -31,6 +33,8 @@ function AppRoutes() {
         <Route path="/ulpin" element={<Protected><ULPINPage /></Protected>} />
         <Route path="/validation" element={<Protected><Validation /></Protected>} />
         <Route path="/infrastructure" element={<Protected><Infrastructure /></Protected>} />
+        <Route path="/settings" element={<Protected><Settings /></Protected>} />
+        <Route path="/prototypes" element={<Protected><Prototypes /></Protected>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

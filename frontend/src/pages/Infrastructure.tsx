@@ -23,7 +23,7 @@ export function Infrastructure() {
     setError(null);
     try {
       const res = await api.conflictCheck(selectedBuilding, depth);
-      setConflictResult(res);
+      setConflictResult(res as Record<string, unknown>);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Check failed");
     } finally {

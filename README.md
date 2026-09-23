@@ -76,19 +76,29 @@ docker compose up --build
 
 ### ✅ Core Features
 
-- **3D City Explorer** - Rotate, zoom, interact with 3D buildings
+- **True 3D City Explorer** - Height-based CSS 3D building blocks, orbit, explode floors, night/day, underground utilities
 - **AI Building Detection** - Upload drone photos, AI extracts buildings
 - **ULPIN Management** - Generate and validate property IDs
 - **Floor/Flat Details** - View individual units per floor
 - **Underground Infrastructure** - View pipes, cables, conflict checks
 - **Dashboard Statistics** - Charts and live counts
+- **Prototypes Gallery** - Jump into every interactive module
+- **Settings** - Profile + change password with strength meter
 
 ### ✅ Authentication (v2)
 
 - **Signup** - Register with email/password
 - **Login** - JWT token-based authentication
+- **Change Password** - `POST /api/auth/change-password` (verify current, bcrypt rehash)
 - **Protected Routes** - Dashboard, 3D Map, Analysis pages require login
 - **Public Pages** - Landing, Login, Signup accessible to all
+
+### Security
+
+- Debug endpoints gated behind `ENABLE_DEBUG=true` (404 otherwise)
+- Login/signup errors do not leak internals
+- CORS allowlist only (no evil-origin reflection)
+- Smoke tests: `python scripts/security_test.py <base_url>`
 
 ---
 
@@ -100,7 +110,7 @@ docker compose up --build
 | Backend Host | Render (Python + PostgreSQL) |
 | Database | PostgreSQL 15 |
 | Frontend | React 18, TypeScript, Tailwind CSS |
-| 3D | Three.js + React Three Fiber + Drei |
+| 3D | CSS 3D transforms (height-based blocks) |
 | Charts | Recharts |
 | Backend | FastAPI, SQLAlchemy, OpenCV |
 | Auth | Python-JWT + bcrypt |

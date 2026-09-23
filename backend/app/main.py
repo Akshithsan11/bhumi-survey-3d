@@ -52,7 +52,7 @@ app = FastAPI(
 
 cors_origins = os.environ.get(
     "CORS_ORIGINS",
-    "https://bhumi-survey-3d.vercel.app,http://localhost:5173,http://localhost:3000",
+    "https://frontend-pied-nine-61.vercel.app,http://localhost:5173,http://localhost:3000",
 ).split(",")
 
 app.add_middleware(
@@ -87,15 +87,31 @@ async def root():
 
 @app.get("/health", tags=["health"], include_in_schema=False)
 async def health():
+    from sqlalchemy import text
+    db_status = "connected"
+    try:
+        db = SessionLocal()
+        try:
+            db.execute(text("SELECT 1"))
+        finally:
+            db.close()
+    except Exception:
+        db_status = "disconnected"
     return {
-        "status": "healthy",
-        "database": "connected",
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
+def _debug_allowed() -> bool:
+    return os.environ.get("ENABLE_DEBUG", "false").lower() == "true"
+
+
 @app.get("/debug/db", tags=["debug"], include_in_schema=False)
 async def debug_db():
+    if not _debug_allowed():
+        raise HTTPException(status_code=404, detail="Not Found")
     try:
         Base.metadata.create_all(bind=engine)
         db = SessionLocal()
@@ -104,18 +120,20 @@ async def debug_db():
             return {"ok": True, "users": n}
         finally:
             db.close()
-    except Exception as exc:
-        return {"ok": False, "error": str(exc)}
+    except Exception:
+        return {"ok": False, "error": "database error"}
 
 
 @app.get("/debug/bcrypt", tags=["debug"], include_in_schema=False)
 async def debug_bcrypt():
+    if not _debug_allowed():
+        raise HTTPException(status_code=404, detail="Not Found")
     try:
         h = get_password_hash("REDACTED")
         from app.services.auth import verify_password
         return {"ok": True, "verified": verify_password("REDACTED", h)}
-    except Exception as exc:
-        return {"ok": False, "error": str(exc)}
+    except Exception:
+        return {"ok": False, "error": "bcrypt error"}
 
 
 if __name__ == "__main__":
