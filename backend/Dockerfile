@@ -26,7 +26,6 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY app/ ./app/
-COPY seed.py ./
 
 # Set permissions
 RUN chown -R appuser:appuser /app

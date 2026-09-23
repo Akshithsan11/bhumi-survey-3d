@@ -1,13 +1,19 @@
 """Bhumi Survey 3D - Database Configuration"""
 
 import os
+from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "sqlite:///./bhumi3d.db",
+from dotenv import load_dotenv
+
+_backend_root = Path(__file__).resolve().parent.parent
+load_dotenv(_backend_root / ".env")
+
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL")
+    or "sqlite:///./bhumi3d.db"
 )
 
 if DATABASE_URL.startswith("postgres://"):
