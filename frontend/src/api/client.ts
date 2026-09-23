@@ -1,8 +1,16 @@
-const RAW_BASE =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" && window.__LANDVERSE_API_URL__) ||
-  "";
-const API_BASE = RAW_BASE.replace(/\/+$/, "").replace(/\/api$/, "");
+function resolveApiBase(): string {
+  const candidates = [
+    import.meta.env.VITE_API_URL,
+    (typeof window !== "undefined" && window.__LANDVERSE_API_URL__) || "",
+  ].filter(Boolean) as string[];
+  for (const c of candidates) {
+    const v = String(c).trim().replace(/\/+$/, "").replace(/\/api$/, "");
+    if (/^https?:\/\/.+/i.test(v)) return v;
+  }
+  return "";
+}
+
+const API_BASE = resolveApiBase();
 
 const getHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -19,7 +27,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
+    const detail = body.detail;
+    const msg =
+      typeof detail === "string"
+        ? detail
+        : Array.isArray(detail)
+          ? detail.map((d: { msg?: string }) => d?.msg || JSON.stringify(d)).join(", ")
+          : detail
+            ? JSON.stringify(detail)
+            : `Request failed: ${res.status}`;
+    throw new Error(msg);
   }
   if (res.status === 204) return undefined as T;
   return res.json();
