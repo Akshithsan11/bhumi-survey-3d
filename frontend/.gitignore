@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+yarn-lock
+package-lock.lock
+
+# Production
+/.next/
+/out/
+
+# Docker
+.dockerignore
+
+# Environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js
+/.cache/
+/dist/
+/*.local
+
+# Vite
+.temp/
+/dist/
+/cache/
+
+# Build
+dist/
+out/
+
+# Bhumi specific
+LANDVERSE_3D_V2_PLAN.md

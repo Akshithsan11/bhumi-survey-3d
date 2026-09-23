@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg/
+venv/
+env/
+.venv/
+env.bak/
+.env
+.secret/
+
+# Uploads
+uploads/
+
+# Database
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.lock
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Bhumi specific
+LANDVERSE_3D_V2_PLAN.md

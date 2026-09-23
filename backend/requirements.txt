@@ -1,0 +1,25 @@
+# FastAPI web framework
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+psycopg2-binary
+alembic
+
+# Authentication
+python-jose[cryptography]
+bcrypt
+
+# CORS
+fastapi-cors  # or use CORSMiddleware from FastAPI
+
+# AI / Computer Vision
+opencv-python
+numpy
+Pillow
+
+# Utilities
+python-dotenv
+aiohttp
+aiofiles
