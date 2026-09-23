@@ -24,20 +24,23 @@ from app.services.auth import get_password_hash
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
     try:
-        admin = db.query(User).filter(User.username == "admin").first()
-        if not admin:
-            admin = User(
-                username="admin",
-                email="admin@example.com",
-                password_hash=get_password_hash("REDACTED"),
-            )
-            db.add(admin)
-            db.commit()
-    finally:
-        db.close()
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            admin = db.query(User).filter(User.username == "admin").first()
+            if not admin:
+                admin = User(
+                    username="admin",
+                    email="admin@example.com",
+                    password_hash=get_password_hash("REDACTED"),
+                )
+                db.add(admin)
+                db.commit()
+        finally:
+            db.close()
+    except Exception as exc:
+        print(f"WARN: DB init failed: {exc}", flush=True)
     yield
 
 
