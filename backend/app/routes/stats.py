@@ -9,7 +9,7 @@ from app.models import (
     User, Parcel, Building, Floor, PropertyUnit,
     ULPIN, Infrastructure,
 )
-from app.dependencies import get_current_user
+from app.dependencies import get_optional_user
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/stats", tags=["stats"])
 @router.get("/dashboard")
 async def dashboard_stats(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     buildings_count = db.query(func.count(Building.id)).scalar() or 0
     parcels_count = db.query(func.count(Parcel.id)).scalar() or 0
@@ -48,7 +48,7 @@ async def dashboard_stats(
 @router.get("/building-types")
 async def building_type_breakdown(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     rows = (
         db.query(Building.building_type, func.count(Building.id))

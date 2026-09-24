@@ -65,23 +65,38 @@ def main():
     st, _, _ = req("GET", "/debug/bcrypt")
     check("debug/bcrypt not exposed", st == 404, str(st))
 
-    # 3. Auth required on protected routes
+    # 3. Guest mode: public GETs allowed, auth still required for identity/writes
     for path in [
         "/api/stats/dashboard",
         "/api/parcels",
         "/api/buildings",
         "/api/ulpin",
         "/api/infrastructure",
+        "/api/floors",
+        "/api/units",
+    ]:
+        st, _, _ = req("GET", path)
+        check(f"public GET {path}", st == 200, str(st))
+
+    for path in [
         "/api/auth/me",
         "/api/auth/change-password",
     ]:
-        st, _, _ = req("GET" if path != "/api/auth/change-password" else "POST", path, body={} if path.endswith("change-password") else None)
+        st, _, _ = req("GET" if path == "/api/auth/me" else "POST", path, body={} if path.endswith("change-password") else None)
         check(f"401 unauth {path}", st == 401, str(st))
+
+    # Writes still require auth
+    st, _, _ = req("POST", "/api/ulpin/generate", body={"plot_code": "X"})
+    check("401 unauth POST /api/ulpin/generate", st == 401, str(st))
+    st, _, _ = req("POST", "/api/parcels", body={"code": "XX"})
+    check("401 unauth POST /api/parcels", st == 401, str(st))
+    st, _, _ = req("POST", "/api/validation", body={"building_id": 1})
+    check("401 unauth POST /api/validation", st == 401, str(st))
 
     # 4. Invalid JWT
     st, _, _ = req(
         "GET",
-        "/api/stats/dashboard",
+        "/api/auth/me",
         headers={"Authorization": "Bearer not-a-real-token"},
     )
     check("invalid JWT rejected 401", st == 401, str(st))

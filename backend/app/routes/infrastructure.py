@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User, Infrastructure, Building
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_optional_user
 from app.schemas import InfrastructureCreate, InfrastructureResponse
 
 router = APIRouter(prefix="/api/infrastructure", tags=["infrastructure"])
@@ -23,7 +23,7 @@ async def list_infrastructure(
     building_id: int | None = None,
     skip: int = 0, limit: int = 100,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     q = db.query(Infrastructure)
     if building_id:

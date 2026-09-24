@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Parcel, Building, User
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_optional_user
 from app.schemas import ParcelCreate, ParcelUpdate, ParcelResponse
 
 router = APIRouter(prefix="/api/parcels", tags=["parcels"])
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/parcels", tags=["parcels"])
 async def list_parcels(
     skip: int = 0, limit: int = 100,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     return db.query(Parcel).offset(skip).limit(limit).all()
 
@@ -25,7 +25,7 @@ async def list_parcels(
 async def get_parcel(
     parcel_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     parcel = db.query(Parcel).filter(Parcel.id == parcel_id).first()
     if not parcel:

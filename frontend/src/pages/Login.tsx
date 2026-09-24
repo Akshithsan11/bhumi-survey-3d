@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
-import { Globe, Mail, Lock, ArrowRight } from "lucide-react";
+import { Globe, Mail, Lock, ArrowRight, Eye } from "lucide-react";
 
 export function Login() {
   const { login } = useAuth();
@@ -26,6 +26,8 @@ export function Login() {
       setLoading(false);
     }
   };
+
+  const guestGo = () => navigate("/map");
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
@@ -68,6 +70,19 @@ export function Login() {
               {loading ? "Signing in..." : "Sign In"} <ArrowRight size={16} className="inline ml-1" />
             </button>
           </form>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-700" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-slate-800/80 px-3 text-slate-500">or</span>
+            </div>
+          </div>
+
+          <button type="button" onClick={guestGo} className="btn-ghost w-full text-sm">
+            <Eye size={16} className="inline mr-2" /> Continue as Guest — Explore 3D Map
+          </button>
 
           <p className="text-center text-sm text-slate-400 mt-6">
             No account? <Link to="/signup" className="text-blue-400 hover:text-blue-300">Sign Up</Link>

@@ -76,7 +76,9 @@ docker compose up --build
 
 ### ✅ Core Features
 
-- **True 3D City Explorer** - Height-based CSS 3D building blocks, orbit, explode floors, night/day, underground utilities
+- **Three.js 3D City Explorer** - Real WebGL scene (OrbitControls, explode floors, underground pipes, Html labels); click a building to inspect it and its ULPIN
+- **Guest Observation Mode** - Browse `/map`, underground, ULPIN history without login; write actions (photo upload, ULPIN generate, validation, conflict check) require sign-in
+- **ULPIN History Registry** - Every generated ULPIN is persisted and listed with search/filter on the History tab
 - **AI Building Detection** - Upload drone photos, AI extracts buildings
 - **ULPIN Management** - Generate and validate property IDs
 - **Floor/Flat Details** - View individual units per floor
@@ -88,9 +90,10 @@ docker compose up --build
 ### ✅ Authentication (v2)
 
 - **Signup** - Register with email/password
-- **Login** - JWT token-based authentication
+- **Login** - JWT token-based authentication + "Continue as Guest" button
 - **Change Password** - `POST /api/auth/change-password` (verify current, bcrypt rehash)
-- **Protected Routes** - Dashboard, 3D Map, Analysis pages require login
+- **Protected Routes** - Dashboard, Analysis, Validation, Settings require login
+- **Guest Routes** - Landing, Login, Signup, 3D Map, Underground, ULPIN, Prototypes open to all
 - **Public Pages** - Landing, Login, Signup accessible to all
 
 ### Security
@@ -110,7 +113,7 @@ docker compose up --build
 | Backend Host | Render (Python + PostgreSQL) |
 | Database | PostgreSQL 15 |
 | Frontend | React 18, TypeScript, Tailwind CSS |
-| 3D | CSS 3D transforms (height-based blocks) |
+| 3D | Three.js + React Three Fiber + drei |
 | Charts | Recharts |
 | Backend | FastAPI, SQLAlchemy, OpenCV |
 | Auth | Python-JWT + bcrypt |

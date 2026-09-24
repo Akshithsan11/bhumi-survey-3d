@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Globe, Building2, Layers, Zap, ArrowRight, Shield, Cpu } from "lucide-react";
+import { Globe, Building2, Layers, Zap, ArrowRight, Shield, Cpu, Eye } from "lucide-react";
 
 export function Landing() {
   const { isAuthenticated } = useAuth();
@@ -18,6 +18,9 @@ export function Landing() {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <Link to="/map" className="btn-ghost text-sm">
+            <Eye size={16} className="inline mr-1" /> 3D Map
+          </Link>
           {isAuthenticated ? (
             <Link to="/dashboard" className="btn-primary text-sm">
               Dashboard <ArrowRight size={16} className="inline ml-1" />
@@ -43,14 +46,17 @@ export function Landing() {
           From satellite photos to interactive 3D cities — AI detection,
           ULPIN generation, floor-level details, and underground infrastructure awareness.
         </p>
-        <div className="flex items-center justify-center gap-4">
-          <Link to={isAuthenticated ? "/map" : "/signup"} className="btn-primary text-lg px-8 py-4">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <Link to="/map" className="btn-primary text-lg px-8 py-4">
             Explore 3D Map <ArrowRight size={18} className="inline ml-2" />
           </Link>
           <Link to={isAuthenticated ? "/analysis" : "/login"} className="btn-ghost text-lg px-8 py-4">
             Try AI Detection
           </Link>
         </div>
+        <p className="text-sm text-slate-500 mt-4">
+          No account needed — open the map as a guest and observe the city.
+        </p>
       </section>
 
       {/* Features */}

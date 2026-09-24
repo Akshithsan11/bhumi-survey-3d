@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { Zap, AlertTriangle, CheckCircle, Shield } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Zap, AlertTriangle, CheckCircle, Shield, Lock } from "lucide-react";
 
 export function Infrastructure() {
+  const { isAuthenticated } = useAuth();
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [conflictResult, setConflictResult] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,10 +70,18 @@ export function Infrastructure() {
                 className="w-full" />
             </div>
 
-            <button onClick={checkConflicts} disabled={!selectedBuilding || loading}
-              className="btn-primary w-full">
-              {loading ? "Checking..." : "Check for Conflicts"}
-            </button>
+            {!isAuthenticated ? (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm flex flex-wrap items-center gap-3">
+                <Lock size={16} className="text-amber-400" />
+                <span className="text-amber-200">Sign in to run conflict checks.</span>
+                <Link to="/login" className="btn-primary text-xs !py-1.5 !px-3 ml-auto">Sign In</Link>
+              </div>
+            ) : (
+              <button onClick={checkConflicts} disabled={!selectedBuilding || loading}
+                className="btn-primary w-full">
+                {loading ? "Checking..." : "Check for Conflicts"}
+              </button>
+            )}
 
             {error && <p className="text-rose-400 text-sm">{error}</p>}
           </div>

@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { Upload, Cpu, Building2, CheckCircle, AlertTriangle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Upload, Cpu, Building2, CheckCircle, AlertTriangle, Lock } from "lucide-react";
 
 interface Detection {
   id: number;
@@ -11,12 +13,35 @@ interface Detection {
 }
 
 export function Analysis() {
+  const { isAuthenticated } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">AI Building Detection</h1>
+          <p className="text-slate-400 mt-1">Upload a drone/satellite photo — real computer vision extracts buildings</p>
+        </div>
+        <div className="card text-center py-16">
+          <Lock size={48} className="mx-auto mb-4 text-amber-400 opacity-60" />
+          <h3 className="text-xl font-semibold mb-2">Sign in to upload photos</h3>
+          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            Photo upload and AI detection require an account. Guests can still explore the 3D map and ULPIN history.
+          </p>
+          <div className="flex justify-center gap-3 flex-wrap">
+            <Link to="/login" className="btn-primary">Sign In</Link>
+            <Link to="/map" className="btn-ghost">Explore 3D Map</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleFile = (f: File) => {
     if (!f.type.startsWith("image/")) {

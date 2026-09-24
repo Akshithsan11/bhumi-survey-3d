@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { Layers, CheckCircle, XCircle, Play } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Layers, CheckCircle, XCircle, Play, Lock } from "lucide-react";
 
 export function Validation() {
+  const { isAuthenticated } = useAuth();
   const [buildings, setBuildings] = useState<Array<Record<string, unknown>>>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
@@ -12,6 +15,26 @@ export function Validation() {
   useEffect(() => {
     api.getBuildings().then(setBuildings).catch(console.error);
   }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Validation</h1>
+          <p className="text-slate-400 mt-1">Run quality checks on building records with a 0–100 score</p>
+        </div>
+        <div className="card text-center py-16">
+          <Lock size={48} className="mx-auto mb-4 text-amber-400 opacity-60" />
+          <h3 className="text-xl font-semibold mb-2">Sign in to run validation</h3>
+          <p className="text-slate-400 mb-6">Validation is a write action and requires an account.</p>
+          <div className="flex justify-center gap-3">
+            <Link to="/login" className="btn-primary">Sign In</Link>
+            <Link to="/map" className="btn-ghost">Explore 3D Map</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const runValidation = async () => {
     if (!selectedId) return;

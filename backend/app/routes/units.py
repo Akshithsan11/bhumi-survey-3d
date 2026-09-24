@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Floor, PropertyUnit, User
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_optional_user
 from app.schemas import UnitCreate, UnitUpdate, UnitResponse
 
 router = APIRouter(prefix="/api/units", tags=["units"])
@@ -17,7 +17,7 @@ async def list_units(
     floor_id: int | None = None,
     skip: int = 0, limit: int = 200,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     q = db.query(PropertyUnit)
     if floor_id:
@@ -29,7 +29,7 @@ async def list_units(
 async def get_unit(
     unit_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User | None = Depends(get_optional_user),
 ):
     u = db.query(PropertyUnit).filter(PropertyUnit.id == unit_id).first()
     if not u:

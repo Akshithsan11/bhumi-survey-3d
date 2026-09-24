@@ -27,14 +27,17 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route element={<Layout />}>
+        {/* Guest-observable pages */}
+        <Route path="/map" element={<Map3D />} />
+        <Route path="/infrastructure" element={<Infrastructure />} />
+        <Route path="/ulpin" element={<ULPINPage />} />
+        <Route path="/prototypes" element={<Prototypes />} />
+
+        {/* Auth-required pages */}
         <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
-        <Route path="/map" element={<Protected><Map3D /></Protected>} />
         <Route path="/analysis" element={<Protected><Analysis /></Protected>} />
-        <Route path="/ulpin" element={<Protected><ULPINPage /></Protected>} />
         <Route path="/validation" element={<Protected><Validation /></Protected>} />
-        <Route path="/infrastructure" element={<Protected><Infrastructure /></Protected>} />
         <Route path="/settings" element={<Protected><Settings /></Protected>} />
-        <Route path="/prototypes" element={<Protected><Prototypes /></Protected>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
