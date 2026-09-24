@@ -4,13 +4,13 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: bhumi
-      POSTGRES_PASSWORD: set-via-env
-      POSTGRES_DB: bhumi3d
+      POSTGRES_USER: ${POSTGRES_USER:-bhumi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-bhumi3d}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bhumi"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bhumi}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,8 +22,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://bhumi:set-via-env@db:5432/bhumi3d
-      JWT_SECRET: set-via-JWT_SECRET-env
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bhumi}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-bhumi3d}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       CORS_ORIGINS: http://localhost:5173,http://localhost:3000
       PORT: "8000"
     ports:

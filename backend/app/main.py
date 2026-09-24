@@ -27,15 +27,18 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        admin = db.query(User).filter(User.username == "admin").first()
-        if not admin:
-            admin = User(
-                username="admin",
-                email="admin@example.com",
-                password_hash=get_password_hash("REDACTED"),
-            )
-            db.add(admin)
-            db.commit()
+        admin_email = os.environ.get("ADMIN_EMAIL", "").strip()
+        admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+        if admin_email and admin_password and len(admin_password) >= 8:
+            admin = db.query(User).filter(User.email == admin_email).first()
+            if not admin:
+                admin = User(
+                    username=os.environ.get("ADMIN_USERNAME", "admin"),
+                    email=admin_email,
+                    password_hash=get_password_hash(admin_password),
+                )
+                db.add(admin)
+                db.commit()
     finally:
         db.close()
     yield
@@ -129,9 +132,10 @@ async def debug_bcrypt():
     if not _debug_allowed():
         raise HTTPException(status_code=404, detail="Not Found")
     try:
-        h = get_password_hash("REDACTED")
+        probe = os.environ.get("DEBUG_PROBE_VALUE", "probe-value")
+        h = get_password_hash(probe)
         from app.services.auth import verify_password
-        return {"ok": True, "verified": verify_password("REDACTED", h)}
+        return {"ok": True, "verified": verify_password(probe, h)}
     except Exception:
         return {"ok": False, "error": "bcrypt error"}
 

@@ -1,9 +1,6 @@
 -- Bhumi Survey 3D Seed Data
 -- Starter data for Hyderabad demo
-
--- Insert admin user (password: REDACTED hashed)
-INSERT INTO users (username, email, password_hash)
-VALUES ('admin', 'admin@example.com', 'REDACTED');
+-- Admin users are created only via ADMIN_EMAIL / ADMIN_PASSWORD env vars (never hardcoded here).
 
 -- Insert sample parcels
 INSERT INTO parcels (code, name, area_sqm, location_lat, location_lng, owner_name, status)

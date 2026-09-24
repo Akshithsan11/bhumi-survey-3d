@@ -5,7 +5,6 @@
 > **Live Site:** https://frontend-pied-nine-61.vercel.app  
 > **Live API:**  https://bhumi-survey-3d-api.onrender.com  
 > **API Docs:**  https://bhumi-survey-3d-api.onrender.com/docs  
-> **Admin login:** `admin@example.com` / `REDACTED`
 
 ---
 

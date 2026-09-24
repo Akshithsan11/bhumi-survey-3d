@@ -1,6 +1,7 @@
 """Bhumi Survey 3D - Authentication Service"""
 
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from jose import jwt, JWTError
@@ -8,9 +9,9 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = os.environ.get(
-    "JWT_SECRET", "set-via-JWT_SECRET-env"
-)
+# Prefer JWT_SECRET from the environment. If missing, use an ephemeral
+# per-process secret so nothing sensitive is ever committed or reused.
+SECRET_KEY = os.environ.get("JWT_SECRET", "").strip() or secrets.token_hex(32)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 

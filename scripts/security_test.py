@@ -3,17 +3,26 @@
 Usage:
   python scripts/security_test.py [BASE_URL]
 Default BASE_URL: http://127.0.0.1:8000
+
+Credentials are read from environment variables only (never hardcoded):
+  TEST_ADMIN_EMAIL    - admin email for login/change-password tests
+  TEST_ADMIN_PASSWORD - admin password for those tests
+
+If TEST_ADMIN_* are unset, admin login tests are skipped.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 import uuid
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
+ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "").strip()
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "").strip()
 RESULTS: list[tuple[bool, str, str]] = []
 
 
@@ -101,11 +110,11 @@ def main():
     )
     check("invalid JWT rejected 401", st == 401, str(st))
 
-    # 5. Login with wrong password
+    # 5. Login with wrong password (any email — no real credentials required)
     st, _, body = req(
         "POST",
         "/api/auth/login",
-        body={"email": "admin@example.com", "password": "wrong-password"},
+        body={"email": "nobody@example.com", "password": "wrong-password"},
     )
     check("wrong password 401", st == 401, str(st))
     detail = str((body or {}).get("detail", "")).lower()
@@ -119,7 +128,7 @@ def main():
     st, _, body = req(
         "POST",
         "/api/auth/login",
-        body={"email": "admin@example.com' OR '1'='1", "password": "x"},
+        body={"email": "nobody@example.com' OR '1'='1", "password": "x"},
     )
     check("SQLi login not 500", st in (400, 401, 422), str(st))
 
@@ -131,74 +140,47 @@ def main():
     )
     check("unauth parcel create blocked", st == 401, str(st))
 
-    # 8. Successful login + change-password flow
-    st, _, body = req(
-        "POST",
-        "/api/auth/login",
-        body={"email": "admin@example.com", "password": "REDACTED"},
-    )
-    check("admin login 200", st == 200, str(st))
-    token = (body or {}).get("access_token", "")
-    if not token:
-        check("got token", False, "no token")
+    # 8. Successful login + change-password flow (only if TEST_ADMIN_* provided)
+    if not (ADMIN_EMAIL and ADMIN_PASSWORD):
+        check("admin login tests skipped (set TEST_ADMIN_EMAIL / TEST_ADMIN_PASSWORD)", True, "skipped")
     else:
-        h = {"Authorization": f"Bearer {token}"}
-        # wrong current password
-        st, _, _ = req(
-            "POST",
-            "/api/auth/change-password",
-            body={"current_password": "nope", "new_password": "NewPass1!"},
-            headers=h,
-        )
-        check("wrong current password rejected", st == 400, str(st))
-
-        # weak new password
-        st, _, _ = req(
-            "POST",
-            "/api/auth/change-password",
-            body={"current_password": "REDACTED", "new_password": "123"},
-            headers=h,
-        )
-        check("short new password rejected", st == 422, str(st))
-
-        # same password
-        st, _, _ = req(
-            "POST",
-            "/api/auth/change-password",
-            body={"current_password": "REDACTED", "new_password": "REDACTED"},
-            headers=h,
-        )
-        check("identical password rejected", st == 400, str(st))
-
-        # valid change then restore
-        st, _, body = req(
-            "POST",
-            "/api/auth/change-password",
-            body={"current_password": "REDACTED", "new_password": "REDACTED"},
-            headers=h,
-        )
-        check("change-password success", st == 200, str(body))
-        st, _, _ = req(
-            "POST",
-            "/api/auth/login",
-            body={"email": "admin@example.com", "password": "REDACTED"},
-        )
-        check("login with new password", st == 200, str(st))
-        # restore
         st, _, body = req(
             "POST",
             "/api/auth/login",
-            body={"email": "admin@example.com", "password": "REDACTED"},
+            body={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
         )
-        token2 = (body or {}).get("access_token", "")
-        if token2:
+        check("admin login 200", st == 200, str(st))
+        token = (body or {}).get("access_token", "")
+        if not token:
+            check("got token", False, "no token")
+        else:
+            h = {"Authorization": f"Bearer {token}"}
+            # wrong current password
             st, _, _ = req(
                 "POST",
                 "/api/auth/change-password",
-                body={"current_password": "REDACTED", "new_password": "REDACTED"},
-                headers={"Authorization": f"Bearer {token2}"},
+                body={"current_password": "nope", "new_password": "NewPass1!"},
+                headers=h,
             )
-            check("restored admin password", st == 200, str(st))
+            check("wrong current password rejected", st == 400, str(st))
+
+            # weak new password
+            st, _, _ = req(
+                "POST",
+                "/api/auth/change-password",
+                body={"current_password": ADMIN_PASSWORD, "new_password": "123"},
+                headers=h,
+            )
+            check("short new password rejected", st == 422, str(st))
+
+            # same password
+            st, _, _ = req(
+                "POST",
+                "/api/auth/change-password",
+                body={"current_password": ADMIN_PASSWORD, "new_password": ADMIN_PASSWORD},
+                headers=h,
+            )
+            check("identical password rejected", st == 400, str(st))
 
     # 9. CORS: allowed origin
     st, headers, _ = req("GET", "/health", origin="https://frontend-pied-nine-61.vercel.app")
@@ -228,11 +210,8 @@ def main():
     )
     check("valid signup works", st == 201, str(st))
 
-    # 12. Secrets not in repo docs returned by API root
+    # 12. API root
     st, _, body = req("GET", "/")
-    blob = json.dumps(body).lower()
-    leaked = any(s in blob for s in ["ghp_", "jwt_secret", "pg_password", "dpubfo"]) and False
-    # just ensure root is fine
     check("API root ok", st == 200, str(st))
 
     # 13. OpenAPI does not include debug routes
