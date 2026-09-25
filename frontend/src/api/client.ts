@@ -73,12 +73,25 @@ export const api = {
   // Buildings
   getBuildings: () => request<Array<Record<string, unknown>>>("/buildings"),
   getBuilding: (id: number) => request<Record<string, unknown>>(`/buildings/${id}`),
+  createBuilding: (data: Record<string, unknown>) =>
+    request<Record<string, unknown>>("/buildings", { method: "POST", body: JSON.stringify(data) }),
+  updateBuilding: (id: number, data: Record<string, unknown>) =>
+    request<Record<string, unknown>>(`/buildings/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteBuilding: (id: number) =>
+    request<void>(`/buildings/${id}`, { method: "DELETE" }),
 
   // Floors & Units
   getFloors: (buildingId?: number) =>
     request<Array<Record<string, unknown>>>(
       `/floors${buildingId ? `?building_id=${buildingId}` : ""}`
     ),
+  createFloor: (buildingId: number, data: Record<string, unknown>) =>
+    request<Record<string, unknown>>(`/floors/${buildingId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteFloor: (floorId: number) =>
+    request<void>(`/floors/${floorId}`, { method: "DELETE" }),
   getUnits: (floorId?: number) =>
     request<Array<Record<string, unknown>>>(
       `/units${floorId ? `?floor_id=${floorId}` : ""}`
@@ -88,6 +101,18 @@ export const api = {
   getULPINs: () => request<Array<Record<string, unknown>>>("/ulpin"),
   generateULPIN: (data: Record<string, unknown>) =>
     request("/ulpin/generate", { method: "POST", body: JSON.stringify(data) }),
+  generateBuildingULPIN: (data: {
+    plot_code?: string;
+    building_code?: string;
+    floors: number;
+    size_sqm: number;
+    building_type?: string;
+    owner_name?: string;
+  }) =>
+    request<Record<string, unknown>>("/ulpin/generate-building", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   validateULPIN: (code: string) =>
     request<Record<string, unknown>>(`/ulpin/validate?ulpin_code=${encodeURIComponent(code)}`),
 
@@ -116,4 +141,7 @@ export const api = {
       body: form,
     }).then((r) => r.json());
   },
+  latestAnalysisImage: () =>
+    request<{ image_id: number | null; image_url: string | null }>("/analysis/latest-image"),
+  analysisImageUrl: (id: number) => `${API_BASE}/api/analysis/images/${id}`,
 };

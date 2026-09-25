@@ -21,16 +21,38 @@ function hash(n: number): number {
 }
 
 const INFRA_COLORS: Record<string, string> = {
+  water: "#38bdf8",
   "Water Pipeline": "#38bdf8",
   "Water Pipeline main": "#38bdf8",
+  sewage: "#a3a3a3",
+  sewer: "#a3a3a3",
   Sewer: "#a3a3a3",
   "Sewer Line": "#a3a3a3",
-  "Electric Cable": "#facc15",
+  power: "#facc15",
   Power: "#facc15",
+  "Electric Cable": "#facc15",
   "Power Cable": "#facc15",
-  "Metro Tunnel": "#f472b6",
+  gas: "#fb923c",
+  Gas: "#fb923c",
+  "Gas Line": "#fb923c",
+  fiber: "#34d399",
   "Fiber Cable": "#34d399",
+  "Metro Tunnel": "#f472b6",
+  telecom: "#34d399",
+  Telecommunication: "#34d399",
 };
+
+export function infraColor(type?: string): string {
+  const t = (type || "").trim();
+  if (INFRA_COLORS[t]) return INFRA_COLORS[t];
+  const s = t.toLowerCase();
+  if (s.includes("water")) return INFRA_COLORS.water;
+  if (s.includes("sewer") || s.includes("sewage")) return INFRA_COLORS.sewage;
+  if (s.includes("power") || s.includes("electric") || s.includes("cable")) return INFRA_COLORS.power;
+  if (s.includes("gas")) return INFRA_COLORS.gas;
+  if (s.includes("fiber") || s.includes("telecom")) return INFRA_COLORS.fiber;
+  return "#94a3b8";
+}
 
 export interface SceneBuilding {
   id: number;
@@ -54,6 +76,9 @@ export interface SceneInfra {
   type: string;
   name?: string | null;
   depth_m?: string | number | null;
+  length_m?: string | number | null;
+  owner_authority?: string | null;
+  status?: string | null;
   building_id?: number | null;
 }
 
@@ -218,7 +243,18 @@ function ParcelPad({
   );
 }
 
-function InfraPipes({ items, visible }: { items: SceneInfra[]; visible: boolean }) {
+function InfraPipes({
+  items,
+  visible,
+  selectedId,
+  onSelect,
+}: {
+  items: SceneInfra[];
+  visible: boolean;
+  selectedId?: number | null;
+  onSelect?: (id: number) => void;
+}) {
+  const [hoverId, setHoverId] = useState<number | null>(null);
   const types = useMemo(() => [...new Set(items.map((i) => i.type || "Utility"))], [items]);
   if (!visible || items.length === 0) return null;
   return (
@@ -228,34 +264,58 @@ function InfraPipes({ items, visible }: { items: SceneInfra[]; visible: boolean 
           .filter((i) => (i.type || "Utility") === t)
           .map((infra, idx) => {
             const depth = Math.min(6, Math.max(0.6, (Number(infra.depth_m) || 5) / 6));
-            const color = INFRA_COLORS[infra.type || ""] || "#94a3b8";
+            const color = infraColor(infra.type);
+            const selected = selectedId === infra.id;
+            const hover = hoverId === infra.id;
+            const showLabel = selected || hover;
+            const intensity = selected ? 1.4 : hover ? 0.9 : 0.45;
+            const radius = selected ? 0.3 : hover ? 0.26 : 0.22;
             return (
-              <group key={`${t}-${idx}`} position={[-10 + idx * 2.4, -depth, 8 + ti * 2.2]}>
+              <group
+                key={`${t}-${idx}`}
+                position={[-10 + idx * 2.4, -depth, 8 + ti * 2.2]}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect?.(infra.id);
+                }}
+                onPointerOver={(e) => {
+                  e.stopPropagation();
+                  setHoverId(infra.id);
+                  document.body.style.cursor = "pointer";
+                }}
+                onPointerOut={() => {
+                  setHoverId((h) => (h === infra.id ? null : h));
+                  document.body.style.cursor = "auto";
+                }}
+              >
                 <mesh rotation={[0, 0, Math.PI / 2]}>
-                  <cylinderGeometry args={[0.22, 0.22, 22, 14]} />
+                  <cylinderGeometry args={[radius, radius, 22, 14]} />
                   <meshStandardMaterial
-                    color={color}
+                    color={selected ? "#ffffff" : color}
                     emissive={color}
-                    emissiveIntensity={0.45}
+                    emissiveIntensity={intensity}
                     transparent
-                    opacity={0.9}
+                    opacity={selected ? 1 : 0.9}
                   />
                 </mesh>
-                <Html distanceFactor={30} position={[0, 0.6, 0]} center>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color,
-                      background: "rgba(8,10,18,0.9)",
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      border: `1px solid ${color}`,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {infra.type} · {infra.depth_m ?? "?"} m
-                  </div>
-                </Html>
+                {showLabel && (
+                  <Html distanceFactor={30} position={[0, 0.6, 0]} center>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: selected ? "#fff" : color,
+                        background: "rgba(8,10,18,0.94)",
+                        padding: "3px 9px",
+                        borderRadius: 999,
+                        border: `1px solid ${color}`,
+                        whiteSpace: "nowrap",
+                        boxShadow: selected ? `0 0 12px ${color}` : "none",
+                      }}
+                    >
+                      {infra.name || infra.type} · {infra.depth_m ?? "?"} m
+                    </div>
+                  </Html>
+                )}
               </group>
             );
           })
@@ -268,23 +328,47 @@ function InfraPipes({ items, visible }: { items: SceneInfra[]; visible: boolean 
   );
 }
 
+function SatelliteGround({ url }: { url: string }) {
+  const tex = useMemo(() => {
+    const loader = new THREE.TextureLoader();
+    const t = loader.load(url);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, [url]);
+  return (
+    <mesh position={[0, -0.08, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[90, 90]} />
+      <meshStandardMaterial map={tex} roughness={0.95} metalness={0} />
+    </mesh>
+  );
+}
+
 export default function CityScene({
   buildings,
   parcels = [],
   infra = [],
   selectedId = null,
+  selectedInfraId = null,
   onSelect = () => {},
+  onSelectInfra = () => {},
   showInfra = true,
   exploded = 0,
+  basemap = "grid",
+  satelliteUrl = null,
   height = 560,
 }: {
   buildings: SceneBuilding[];
   parcels?: SceneParcel[];
   infra?: SceneInfra[];
   selectedId?: number | null;
+  selectedInfraId?: number | null;
   onSelect?: (id: number) => void;
+  onSelectInfra?: (id: number) => void;
   showInfra?: boolean;
   exploded?: number;
+  basemap?: "grid" | "satellite";
+  satelliteUrl?: string | null;
   height?: number;
 }) {
   const groups = useMemo(() => {
@@ -331,15 +415,24 @@ export default function CityScene({
         <pointLight position={[-12, 8, -10]} intensity={0.6} color="#00ffff" />
         <pointLight position={[12, 6, 12]} intensity={0.4} color="#f0abfc" />
 
-        <Grid
-          position={[0, -0.12, 0]}
-          args={[60, 60]}
-          cellColor="#123"
-          sectionColor="#0ff"
-          fadeDistance={70}
-          fadeStrength={2}
-          infiniteGrid
-        />
+        {basemap === "satellite" && satelliteUrl ? (
+          <SatelliteGround url={satelliteUrl} />
+        ) : basemap === "satellite" ? (
+          <mesh position={[0, -0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[90, 90]} />
+            <meshStandardMaterial color="#1a2416" roughness={1} metalness={0} />
+          </mesh>
+        ) : (
+          <Grid
+            position={[0, -0.12, 0]}
+            args={[60, 60]}
+            cellColor="#123"
+            sectionColor="#0ff"
+            fadeDistance={70}
+            fadeStrength={2}
+            infiniteGrid
+          />
+        )}
 
         {groups.map(([key, list], gi) => {
           const first = list[0];
@@ -376,7 +469,12 @@ export default function CityScene({
           });
         })}
 
-        <InfraPipes items={infra} visible={showInfra} />
+        <InfraPipes
+          items={infra}
+          visible={showInfra}
+          selectedId={selectedInfraId}
+          onSelect={onSelectInfra}
+        />
 
         {buildings.length === 0 && (
           <Html center position={[0, 3, 0]}>

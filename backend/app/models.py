@@ -81,6 +81,7 @@ class Building(Base):
     code = Column(String(20), unique=True, nullable=False, index=True)
     height_m = Column(String(10))
     total_floors = Column(Integer, default=0)
+    area_sqm = Column(String(20))
     building_type = Column(String(50), default="residential")
     ai_confidence = Column(String(10))
     ai_model_version = Column(String(50), default="v1.0")

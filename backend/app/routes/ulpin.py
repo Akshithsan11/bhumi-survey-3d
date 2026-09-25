@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import ULPIN, User
+from app.models import ULPIN, User, Parcel, Building, Floor
 from app.dependencies import get_current_user, get_optional_user
-from app.models import Building
-from app.schemas import ULPINCreate, ULPINResponse
+from app.schemas import ULPINCreate, ULPINResponse, PlotBuildCreate, PlotBuildResponse
 from app.services.ulpin import generate_ulpin, validate_ulpin_format
 
 router = APIRouter(prefix="/api/ulpin", tags=["ulpin"])
@@ -79,3 +78,91 @@ async def generate_new_ulpin(
     db.commit()
     db.refresh(ulpin)
     return ulpin
+
+
+@router.post("/generate-building", response_model=PlotBuildResponse, status_code=201)
+async def generate_plot_building(
+    data: PlotBuildCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create parcel (if needed) + building + floors + ULPIN atomically."""
+    plot_code = (data.plot_code or "").strip() or None
+    if not plot_code:
+        n = db.query(Parcel).count() + 1
+        while True:
+            candidate = f"PRC-M{n:03d}"
+            if not db.query(Parcel).filter(Parcel.code == candidate).first():
+                plot_code = candidate
+                break
+            n += 1
+
+    parcel = db.query(Parcel).filter(Parcel.code == plot_code).first()
+    if not parcel:
+        parcel = Parcel(
+            code=plot_code,
+            name=f"Plot {plot_code}",
+            area_sqm=str(round(data.size_sqm, 2)),
+            owner_name=data.owner_name or current_user.username,
+            status="active",
+        )
+        db.add(parcel)
+        db.flush()
+
+    building_code = (data.building_code or "").strip() or None
+    if not building_code:
+        n = db.query(Building).count() + 1
+        while True:
+            candidate = f"BLD-{n:03d}"
+            if not db.query(Building).filter(Building.code == candidate).first():
+                building_code = candidate
+                break
+            n += 1
+    elif db.query(Building).filter(Building.code == building_code).first():
+        raise HTTPException(409, f"Building code '{building_code}' already exists")
+
+    height_m = round(data.floors * 3.4, 1)
+    area_sqm = round(data.size_sqm, 2)
+    building = Building(
+        parcel_id=parcel.id,
+        code=building_code,
+        height_m=str(height_m),
+        total_floors=data.floors,
+        area_sqm=str(area_sqm),
+        building_type=(data.building_type or "residential").lower(),
+        status="active",
+    )
+    db.add(building)
+    db.flush()
+
+    for n in range(1, data.floors + 1):
+        db.add(Floor(building_id=building.id, floor_number=n, floor_height_m="3.4", total_units=0))
+
+    ulpin_code = generate_ulpin(plot_code=plot_code, building_code=building_code)
+    sqft = round(area_sqm * 10.7639, 2)
+    ulpin = ULPIN(
+        property_id=building.id,
+        ulpin_code=ulpin_code,
+        plot_code=plot_code,
+        building_code=building_code,
+        total_area_sqm=str(area_sqm),
+        total_area_sqft=str(sqft),
+        owner_name=data.owner_name or current_user.username,
+        validated=0,
+    )
+    db.add(ulpin)
+    db.commit()
+    db.refresh(building)
+    db.refresh(ulpin)
+    return PlotBuildResponse(
+        building_id=building.id,
+        building_code=building.code,
+        parcel_id=parcel.id,
+        plot_code=plot_code,
+        floors_created=data.floors,
+        height_m=height_m,
+        area_sqm=area_sqm,
+        total_area_sqft=sqft,
+        ulpin_id=ulpin.id,
+        ulpin_code=ulpin.ulpin_code,
+    )

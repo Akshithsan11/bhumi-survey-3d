@@ -25,6 +25,7 @@ from app.services.auth import get_password_hash
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _ensure_columns()
     db = SessionLocal()
     try:
         admin_email = os.environ.get("ADMIN_EMAIL", "").strip()
@@ -42,6 +43,20 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
     yield
+
+
+def _ensure_columns():
+    """Add columns introduced after initial create_all (SQLite-safe)."""
+    from sqlalchemy import inspect, text
+    try:
+        insp = inspect(engine)
+        if "buildings" in insp.get_table_names():
+            cols = {c["name"] for c in insp.get_columns("buildings")}
+            if "area_sqm" not in cols:
+                with engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE buildings ADD COLUMN area_sqm VARCHAR(20)"))
+    except Exception:
+        pass
 
 
 app = FastAPI(

@@ -85,6 +85,7 @@ class BuildingCreate(BaseModel):
     parcel_id: int
     height_m: Optional[str] = None
     total_floors: Optional[int] = None
+    area_sqm: Optional[str] = None
     building_type: Optional[str] = "residential"
     ai_confidence: Optional[str] = None
 
@@ -93,6 +94,7 @@ class BuildingUpdate(BaseModel):
     code: Optional[str] = None
     height_m: Optional[str] = None
     total_floors: Optional[int] = None
+    area_sqm: Optional[str] = None
     building_type: Optional[str] = None
     ai_confidence: Optional[str] = None
     status: Optional[str] = None
@@ -104,6 +106,7 @@ class BuildingResponse(BaseModel):
     code: str
     height_m: Optional[str]
     total_floors: Optional[int]
+    area_sqm: Optional[str]
     building_type: Optional[str]
     ai_confidence: Optional[str]
     status: str
@@ -184,6 +187,28 @@ class ULPINCreate(BaseModel):
     floor_code: Optional[str] = None
     unit_code: Optional[str] = None
     owner_name: Optional[str] = None
+
+
+class PlotBuildCreate(BaseModel):
+    plot_code: Optional[str] = Field(None, min_length=2, max_length=20)
+    building_code: Optional[str] = Field(None, min_length=2, max_length=20)
+    floors: int = Field(..., ge=1, le=60)
+    size_sqm: float = Field(..., gt=0, le=1_000_000)
+    building_type: Optional[str] = Field("residential", max_length=50)
+    owner_name: Optional[str] = Field(None, max_length=100)
+
+
+class PlotBuildResponse(BaseModel):
+    building_id: int
+    building_code: str
+    parcel_id: int
+    plot_code: str
+    floors_created: int
+    height_m: float
+    area_sqm: float
+    total_area_sqft: float
+    ulpin_id: int
+    ulpin_code: str
 
 
 class ULPINResponse(BaseModel):
